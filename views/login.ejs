@@ -33,13 +33,14 @@
     <div class="center-form">
       <div class="container-sm">
         <h1 class="text-center">Login</h1>
-        <form>
+        <form method="post" action="/user/login">
           <div class="form-floating mb-3">
             <input
               type="text"
               class="form-control"
               id="floatingInput"
               placeholder="Username"
+              name="username"
               required
             />
             <label for="floatingInput">Username</label>
@@ -50,6 +51,7 @@
               class="form-control"
               id="floatingPassword"
               placeholder="Password"
+              name="password"
               required
             />
             <label for="floatingPassword">Password</label>
@@ -57,6 +59,13 @@
           <div class="button mt-3">
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>
+          <% if (errors && errors.length > 0) { %>
+          <div class="alert alert-danger mt-3" role="alert">
+            <% errors.forEach(error => { %>
+            <p><%= error %></p>
+            <% }) %>
+          </div>
+          <% } %>
         </form>
       </div>
     </div>

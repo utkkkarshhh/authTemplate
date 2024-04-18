@@ -1,45 +1,28 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const connectDB = require("./databaseConnection");
 const userRouter = require("./routes/userRoutes");
+const mainRouter = require("./routes/mainRouter");
+const { checkAuth } = require("./middlewares/auth");
 
-const app = express();
+// Middlewares
 dotenv.config();
+const app = express();
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("views", express.static("public"));
 app.use(bodyParser.json());
 
-mongoose
-  .connect(process.env.DB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.log("Error connecting to DB: ", err);
-  });
+// DB
+connectDB(process.env.DB_URL);
 
-PORT = process.env.PORT;
-
+// Routes
 app.use("/user", userRouter);
+app.use(checkAuth, mainRouter);
 
-app.get("/", (req, res) => {
-  res.render("landing.ejs");
-});
-app.get("/login", (req, res) => {
-  res.render("login.ejs");
-});
-
-app.get("/register", (req, res) => {
-  res.render("register.ejs");
-});
-app.get("/home", (req, res) => {
-  res.render("home.ejs");
-});
-
-app.listen(PORT, () => {
-  console.log(`App is live on port ${PORT}`);
+//Listen to port
+app.listen(process.env.PORT, () => {
+  console.log(`App is live on port ${process.env.PORT}`);
 });

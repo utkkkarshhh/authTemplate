@@ -1,22 +1,25 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
+const { setUser } = require("../service/auth");
 
 const registerUser = async (req, res) => {
   const { name, username, email, password, gender, birthday, picture } =
     req.body;
-  console.log(req.body.name);
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
   const newUser = new User({
     name,
     username,
     email,
-    password,
+    password: hashedPassword,
     gender,
     birthday,
     picture,
   });
   try {
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+    res.redirect("/login");
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -27,16 +30,26 @@ const loginUser = async (req, res) => {
   try {
     const user = await User.findOne({ username });
     if (user) {
-      if (user.password === password) {
-        res.status(200).json(user);
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (isPasswordValid) {
+        const sessionId = uuidv4();
+        setUser(sessionId, user);
+        res.cookie("uid", sessionId);
+        res.redirect("/home");
       } else {
-        res.status(400).json({ message: "Incorrect password" });
+        res.render("login.ejs", {
+          message: "Incorrect password",
+          errors: ["Incorrect Password"],
+        });
       }
     } else {
-      res.status(400).json({ message: "Incorrect username" });
+      res.render("login.ejs", {
+        message: "Incorrect username",
+        errors: ["Incorrect username"],
+      });
     }
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({ message: err.message, errors: [err.message] });
   }
 };
 
